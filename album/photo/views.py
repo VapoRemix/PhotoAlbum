@@ -1,3 +1,6 @@
+import time
+
+import requests
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator
@@ -96,10 +99,30 @@ def home(request):
     return render(request, 'photo/list.html', context)
 
 
+def put_object_oss(ObjectName, LocalFile, BucketName):
+    # 上传文件名，本地文件路径
+    bucket.put_object(ObjectName, LocalFile)
+    # 返回的网址
+    return f"https://{BucketName}.oss-cn-hangzhou.aliyuncs.com/{ObjectName}"
+
+
 def upload(request):
     if request.method == 'POST' and request.user.is_superuser:
+        print(request.FILES)
         images = request.FILES.getlist('images')
         for i in images:
-            photo = Photo(image=i)
-            photo.save()
+            # image_object = request.FILES.get('InMemoryUploadedFile')
+
+            # 重命名（获取上传文件的后缀名）
+            ext = i.name.rsplit('.')[-1]
+            # 重新命名的名字（我这里使用time，防止重复的可以选择uuid）
+            key = "{}.{}".format(time.strftime("%Y%m%d%H%M%S"), ext)
+
+            # read()获取image_object的bytes字节串；
+            image_object_bytes = i.read()
+            put_object_oss(ObjectName=key, LocalFile=image_object_bytes, BucketName='vaporemix-photo-album')
+
+            # photo = Photo(image=i)
+            # photo.save()
+            # input = requests.get(i)
     return redirect('home')
