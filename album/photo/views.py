@@ -109,23 +109,35 @@ def put_object_oss(ObjectName, LocalFile, BucketName):
 
 def upload(request):
     if request.method == 'POST' and request.user.is_superuser:
-        print(request.FILES)
-        images = request.FILES.getlist('images')
-        for i in images:
-            # image_object = request.FILES.get('InMemoryUploadedFile')
-
-            # 重命名（获取上传文件的后缀名）
-            ext = i.name.rsplit('.')[-1]
-            # 重新命名的名字（我这里使用time，防止重复的可以选择uuid）
-            key = "{}.{}".format(time.strftime("%Y%m%d%H%M%S"), ext)
-
-            # read()获取image_object的bytes字节串；
-            # image_object_bytes = i.read()
-            # put_object_oss(ObjectName=key, LocalFile=image_object_bytes, BucketName='vaporemix-photo-album')
-
+        data = request.POST
+        for i, j in zip(request.FILES.getlist('images'), data.getlist('story')):
+            print(i, j)
             photo = Photo(image=i)
+            photo.introduction = j
             photo.author = User.objects.get(id=request.user.id)
-            photo.image_name=Photo(image=i)
             photo.save()
 
     return redirect('home')
+
+# def upload(request):
+#     if request.method == 'POST' and request.user.is_superuser:
+#         print(request.POST.get('story'))
+#         images = request.FILES.getlist('images')
+#         for i in images:
+#             # image_object = request.FILES.get('InMemoryUploadedFile')
+#
+#             # 重命名（获取上传文件的后缀名）
+#             ext = i.name.rsplit('.')[-1]
+#             # 重新命名的名字（我这里使用time，防止重复的可以选择uuid）
+#             key = "{}.{}".format(time.strftime("%Y%m%d%H%M%S"), ext)
+#
+#             # read()获取image_object的bytes字节串；
+#             # image_object_bytes = i.read()
+#             # put_object_oss(ObjectName=key, LocalFile=image_object_bytes, BucketName='vaporemix-photo-album')
+#
+#             photo = Photo(image=i)
+#             photo.author = User.objects.get(id=request.user.id)
+#             photo.image_name = Photo(image=i)
+#             photo.save()
+#
+#     return redirect('home')
