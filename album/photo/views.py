@@ -1,6 +1,7 @@
 import time
 
 import requests
+from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.core.paginator import Paginator
@@ -119,10 +120,12 @@ def upload(request):
             key = "{}.{}".format(time.strftime("%Y%m%d%H%M%S"), ext)
 
             # read()获取image_object的bytes字节串；
-            image_object_bytes = i.read()
-            put_object_oss(ObjectName=key, LocalFile=image_object_bytes, BucketName='vaporemix-photo-album')
+            # image_object_bytes = i.read()
+            # put_object_oss(ObjectName=key, LocalFile=image_object_bytes, BucketName='vaporemix-photo-album')
 
-            # photo = Photo(image=i)
-            # photo.save()
-            # input = requests.get(i)
+            photo = Photo(image=i)
+            photo.author = User.objects.get(id=request.user.id)
+            photo.image_name=Photo(image=i)
+            photo.save()
+
     return redirect('home')

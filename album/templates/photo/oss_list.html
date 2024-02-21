@@ -12,11 +12,15 @@
                     data-bs-toggle="modal"
                     data-bs-target="#photo-{{ photo.etag }}"
                     >
-                        <img
-                        src="https://vaporemix-photo-album.oss-cn-hangzhou.aliyuncs.com/{{ photo.key }}"
-                        alt=""
-                        class="card-img"
-                        >
+                        <div>
+                            <img
+                            src="https://vaporemix-photo-album.oss-cn-hangzhou.aliyuncs.com/{{ photo.key }}"
+                            alt=""
+                            class="card-img"
+                            >
+                            <div>{{ photo.author }}</div>
+                        </div>
+
                     </a>
                 </div>
             </div>
