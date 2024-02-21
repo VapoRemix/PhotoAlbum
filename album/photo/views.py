@@ -76,14 +76,6 @@ def oss_home(request):
 
 
 def home(request):
-    photos = Photo.objects.all()
-    # 新增分页代码
-    paginator = Paginator(photos, 5)
-    page_number = request.GET.get('page')
-    paged_photos = paginator.get_page(page_number)
-    # 将分页器对象传入上下文
-    context = {'photos': paged_photos}
-
     # 处理登入登出的POST请求
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -96,6 +88,17 @@ def home(request):
         isLogout = request.POST.get('isLogout')
         if isLogout == 'True':
             logout(request)
+
+    # photos = Photo.objects.all()
+    photos = Photo.objects.filter(author_id=request.user.id)
+    # 新增分页代码
+    paginator = Paginator(photos, 5)
+    page_number = request.GET.get('page')
+    paged_photos = paginator.get_page(page_number)
+    # 将分页器对象传入上下文
+    context = {'photos': paged_photos}
+
+
 
     return render(request, 'photo/list.html', context)
 

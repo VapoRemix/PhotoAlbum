@@ -8,9 +8,15 @@
             data-bs-toggle="modal" 
             data-bs-target="#login"
         >
+            {% if user.is_superuser %}
             <h2>
-                Awesome Album
+                这是{{ user.username }}的时间碎片
             </h2>
+            {% else %}
+            <h2>
+                VapoRemix的时间碎片
+            </h2>
+            {% endif %}
         </a>
         <!-- 登录模态窗 -->
         {% if user.is_superuser %}

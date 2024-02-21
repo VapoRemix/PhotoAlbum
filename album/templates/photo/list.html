@@ -4,6 +4,7 @@
 {% block content %}
 <div class="container py-2">
     <div class="row" data-masonry='{"percentPosition": true}' id="cards">
+        {% if photos %}
         {% for photo in photos %}
         <div class="col-4 py-2 grid-item">
             <div class="card hvr-float-shadow">
@@ -26,9 +27,8 @@
             </div>
         </div>
         {% endfor %}
-    </div>
 
-    <div class="row justify-content-center py-5">
+        <div class="row justify-content-center py-5">
             <span class="step-links paginator">
                 {% if photos.has_previous %}
                     <a
@@ -60,7 +60,31 @@
                     </a>
                 {% endif %}
             </span>
+        </div>
+        {% else %}
+        <div class="alert alert-secondary" id="login">
+
+
+            <form action="{% url 'home' %}" method="post">{% csrf_token %}
+                <div class="mb-3">
+                    <label for="username-" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username-" name="username">
+                </div>
+                <div class="mb-3">
+                    <label for="pwd-" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="pwd-" name="password">
+                    <div id="emailHelp" class="form-text">
+                        We'll never share your password with anyone else.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+
+
+        </div>
+        {% endif %}
     </div>
+
 </div>
 
 {% for photo in photos  %}
