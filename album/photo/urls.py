@@ -7,7 +7,7 @@ app_name = 'photo'
 
 # url列表
 urlpatterns = [
-    path('', oss_home, name='home'),
+    path('', oss_home, name='oss_home'),
     path('upload/', upload, name='upload'),
 #    path('oss-home/', oss_home, name='oss_home'),
 ]

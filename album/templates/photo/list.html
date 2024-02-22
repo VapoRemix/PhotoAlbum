@@ -9,11 +9,7 @@
         <div class="col-4 py-2 grid-item">
             <div class="card hvr-float-shadow">
                 <div class="card-body">
-                    <h5 class="card-title">{{ photo.author }}</h5>
-                    <p class="card-text">{{ photo.introduction }}</p>
-                    <p class="card-text"><small class="text-muted">{{ photo.created }}</small></p>
-                </div>
-                <a
+                    <a
                         href="#"
                         data-bs-toggle="modal"
                         data-bs-target="#photo-{{ photo.id }}"
@@ -24,6 +20,10 @@
                             class="card-img"
                     >
                 </a>
+                    <h5 class="card-title">{{ photo.author }}</h5>
+                    <p class="card-text">{{ photo.introduction }}</p>
+                    <p class="card-text"><small class="text-muted">{{ photo.created }}</small></p>
+                </div>
             </div>
         </div>
         {% endfor %}

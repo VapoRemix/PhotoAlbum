@@ -42,7 +42,7 @@ class ObjIterator(oss2.ObjectIteratorV2):
                                              encoding_type=self.encoding_type,
                                              max_keys=self.max_keys,
                                              headers=self.headers)
-        self.entries = result.object_list + [oss2.models.SimplifiedObjectInfo(prefix, None, None, None, None, None)
+        self.entries = result.object_list + [SimplifiedOssObjectInfo(prefix, None, None, None, None, None)
                                              for prefix in result.prefix_list]
         # 让图片以上传时间倒序
         self.entries.sort(key=lambda obj: -obj.last_modified)
@@ -50,15 +50,50 @@ class ObjIterator(oss2.ObjectIteratorV2):
         return result.is_truncated, result.next_continuation_token
 
 
+class SimplifiedOssObjectInfo(oss2.models.SimplifiedObjectInfo):
+    def __init__(self, key, last_modified, etag, type, size, storage_class):
+        #: 文件名，或公共前缀名。
+        super().__init__(key, last_modified, etag, type, size, storage_class)
+        self.key = key
+
+        #: 文件的最后修改时间
+        self.last_modified = last_modified
+
+        #: HTTP ETag
+        self.etag = etag
+
+        #: 文件类型
+        self.type = type
+
+        #: 文件大小
+        self.size = size
+
+        #: 文件的存储类别，是一个字符串。
+        self.storage_class = storage_class
+
+        #: owner信息, 类型为: class:`Owner <oss2.models.Owner>`
+        self.owner = self.owner
+
+        # meta data
+        self.meta = None
+
+
 def oss_home(request):
     photos = ObjIterator(bucket)
-    # for photo in photos:
-    #     print(photo.etag)
-    #     print(photo.__dict__)
-    #     print(photo.key)
     paginator = Paginator(photos, 6)
     page_number = request.GET.get('page')
     paged_photos = paginator.get_page(page_number)
+    for i in paged_photos:
+        i.meta = bucket.get_object(i.key).headers
+        if 'X-Oss-Meta-Author' not in i.meta:
+            i.meta['X_Oss_Meta_Author'] = ''
+        else:
+            i.meta['X_Oss_Meta_Author'] = i.meta['X-Oss-Meta-Author']
+        if 'X-Oss-Meta-Story' not in i.meta:
+            i.meta['X_Oss_Meta_Story'] = ''
+        else:
+            i.meta['X_Oss_Meta_Story'] = i.meta['X-Oss-Meta-Story']
+
     context = {'photos': paged_photos}
     # 处理登入登出的POST请求
     if request.method == 'POST':
@@ -98,14 +133,18 @@ def home(request):
     # 将分页器对象传入上下文
     context = {'photos': paged_photos}
 
-
-
     return render(request, 'photo/list.html', context)
 
 
-def put_object_oss(ObjectName, LocalFile, BucketName):
+def put_object_oss(ObjectName, LocalFile, BucketName, meta: dict):
+    headers = {
+        'x-oss-meta-author': meta["author"],
+        'x-oss-meta-story': meta["story"],
+        'Content-Type': 'application/json; charset=utf-8'
+    }
+    print("元数据：", headers)
     # 上传文件名，本地文件路径
-    bucket.put_object(ObjectName, LocalFile)
+    bucket.put_object(key=ObjectName, data=LocalFile, headers=headers)
     # 返回的网址
     return f"https://{BucketName}.oss-cn-hangzhou.aliyuncs.com/{ObjectName}"
 
@@ -114,11 +153,24 @@ def upload(request):
     if request.method == 'POST' and request.user.is_superuser:
         data = request.POST
         for i, j in zip(request.FILES.getlist('images'), data.getlist('story')):
-            print(i, j)
-            photo = Photo(image=i)
-            photo.introduction = j
-            photo.author = User.objects.get(id=request.user.id)
-            photo.save()
+            # 重命名（获取上传文件的后缀名）
+            ext = i.name.rsplit('.')[-1]
+            # 重新命名的名字（我这里使用time，防止重复的可以选择uuid）
+            key = "{}.{}".format(time.strftime("%Y%m%d%H%M%S"), ext)
+            # meta data
+            meta = {
+                'author': str(User.objects.get(id=request.user.id)),
+                'story': j
+            }
+
+            image_object_bytes = i.read()
+            put_object_oss(ObjectName=key, LocalFile=image_object_bytes, BucketName='vaporemix-photo-album',
+                           meta=meta)
+            #
+            # photo = Photo(image=i)
+            # photo.introduction = j
+            # photo.author = User.objects.get(id=request.user.id)
+            # photo.save()
 
     return redirect('home')
 
