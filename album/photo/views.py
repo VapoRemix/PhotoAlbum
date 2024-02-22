@@ -1,3 +1,4 @@
+import datetime
 import time
 
 import requests
@@ -79,22 +80,7 @@ class SimplifiedOssObjectInfo(oss2.models.SimplifiedObjectInfo):
 
 
 def oss_home(request):
-    photos = ObjIterator(bucket)
-    paginator = Paginator(photos, 6)
-    page_number = request.GET.get('page')
-    paged_photos = paginator.get_page(page_number)
-    for i in paged_photos:
-        i.meta = bucket.get_object(i.key).headers
-        if 'X-Oss-Meta-Author' not in i.meta:
-            i.meta['X_Oss_Meta_Author'] = ''
-        else:
-            i.meta['X_Oss_Meta_Author'] = i.meta['X-Oss-Meta-Author']
-        if 'X-Oss-Meta-Story' not in i.meta:
-            i.meta['X_Oss_Meta_Story'] = ''
-        else:
-            i.meta['X_Oss_Meta_Story'] = i.meta['X-Oss-Meta-Story']
-
-    context = {'photos': paged_photos}
+    user_photos = []
     # 处理登入登出的POST请求
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -107,6 +93,26 @@ def oss_home(request):
         isLogout = request.POST.get('isLogout')
         if isLogout == 'True':
             logout(request)
+    # oss取数据
+    photos = ObjIterator(bucket)
+    for i in photos:
+        metadata = bucket.get_object(i.key).headers
+        dt = datetime.datetime.fromtimestamp(i.last_modified)
+        formatted_date = dt.strftime("%Y-%m-%d")
+        i.meta = {
+            'X_Oss_Meta_Story': metadata.get('X-Oss-Meta-Story', ''),
+            'X_Oss_Meta_Author': metadata.get('X-Oss-Meta-Author', ''),
+            'Date': formatted_date
+        }
+        if i.meta['X_Oss_Meta_Author'] == str(request.user):
+            user_photos.append(i)
+
+    paginator = Paginator(user_photos, 6)
+    page_number = request.GET.get('page')
+    paged_photos = paginator.get_page(page_number)
+
+    context = {'photos': paged_photos}
+
     return render(request, 'photo/oss_list.html', context)
 
 
@@ -140,7 +146,6 @@ def put_object_oss(ObjectName, LocalFile, BucketName, meta: dict):
     headers = {
         'x-oss-meta-author': meta["author"],
         'x-oss-meta-story': meta["story"],
-        'Content-Type': 'application/json; charset=utf-8'
     }
     print("元数据：", headers)
     # 上传文件名，本地文件路径
@@ -160,7 +165,8 @@ def upload(request):
             # meta data
             meta = {
                 'author': str(User.objects.get(id=request.user.id)),
-                'story': j
+                'story': j,
+                'time': int(datetime.datetime.now().timestamp())
             }
 
             image_object_bytes = i.read()
