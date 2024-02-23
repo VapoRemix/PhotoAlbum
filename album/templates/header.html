@@ -2,11 +2,11 @@
 <nav class="navbar navbar-expand navbar-dark bg-dark">
     <div class="container">
         <!-- 标志 -->
-        <a 
-            class="navbar-brand" 
-            href="#"
-            data-bs-toggle="modal" 
-            data-bs-target="#login"
+        <a
+                class="navbar-brand"
+                href="#"
+                data-bs-toggle="modal"
+                data-bs-target="#login"
         >
             {% if user.is_superuser %}
             <h2>
@@ -20,20 +20,20 @@
         </a>
         <!-- 登录模态窗 -->
         {% if user.is_superuser %}
-            <ul class="navbar-nav">
-                <li class="nav-item">
+        <ul class="navbar-nav">
+            <li class="nav-item">
                 <h2>
-                    <a 
-                    class="nav-link active"
-                    href="#"
-                    data-bs-toggle="modal"
-                    data-bs-target="#upload"
+                    <a
+                            class="nav-link active"
+                            href="#"
+                            data-bs-toggle="modal"
+                            data-bs-target="#upload"
                     >
                         +
                     </a>
                 </h2>
-                </li>
-            </ul>
+            </li>
+        </ul>
         {% endif %}
     </div>
 </nav>
@@ -60,30 +60,34 @@
             <div class="modal-body">
                 <h5 class="modal-title">上传图片</h5>
                 <form action="{% url 'photo:upload' %}"
-                method="post"
-                enctype="multipart/form-data"
+                      method="post"
+                      enctype="multipart/form-data"
                 >
                     {% csrf_token %}
                     <div class="col py-2">
                         <input
-                            class="form-control" 
-                            type="file"
-                            id="images" 
-                            name="images" 
-                            multiple="multiple"
-                            accept="image/*"
+                                class="form-control"
+                                type="file"
+                                id="images"
+                                name="images"
+                                multiple="multiple"
+                                accept="image/*"
                         >
                     </div>
                     <div class="col py-2">
                         <input
-                            class="form-control"
-                            type="text"
-                            id="story"
-                            name="story"
-                            multiple="multiple"
+                                class="form-control"
+                                type="text"
+                                id="story"
+                                name="story"
+                                multiple="multiple"
                         >
                     </div>
-                    <button type="submit" class="btn btn-primary">提交</button>
+                    <button type="submit" class="btn btn-primary" id="submit" onclick="go()">提交</button>
+                    <button class="btn btn-primary" type="button" disabled id="loder" style="display:none;">
+                      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      提交中
+                    </button>
                 </form>
             </div>
         </div>
@@ -109,9 +113,18 @@
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Login</button>
-                  </form>
+                </form>
             </div>
         </div>
     </div>
 </div>
 {% endif %}
+<script>
+        function go() {
+            // 获取提交按钮元素和加载动画元素
+            var submitBtn = document.getElementById("submit");
+            var loader = document.getElementById("loader");
+            submitBtn.style.display = none;
+            loader.style.display = "";
+        }
+    </script>

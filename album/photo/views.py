@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import datetime
 import time
 
@@ -100,8 +101,8 @@ def oss_home(request):
         dt = datetime.datetime.fromtimestamp(i.last_modified)
         formatted_date = dt.strftime("%Y-%m-%d")
         i.meta = {
-            'X_Oss_Meta_Story': metadata.get('X-Oss-Meta-Story', ''),
-            'X_Oss_Meta_Author': metadata.get('X-Oss-Meta-Author', ''),
+            'X_Oss_Meta_Story': metadata.get('X-Oss-Meta-Story', '').encode('latin1').decode('utf-8'),
+            'X_Oss_Meta_Author': metadata.get('X-Oss-Meta-Author', '').encode('latin1').decode('utf-8'),
             'Date': formatted_date
         }
         if i.meta['X_Oss_Meta_Author'] == str(request.user):
@@ -144,10 +145,10 @@ def home(request):
 
 def put_object_oss(ObjectName, LocalFile, BucketName, meta: dict):
     headers = {
-        'x-oss-meta-author': meta["author"],
-        'x-oss-meta-story': meta["story"],
+        'x-oss-meta-author': meta["author"].encode("utf-8").decode('utf-8'),
+        'x-oss-meta-story': meta["story"].encode("utf-8").decode('utf-8'),
+
     }
-    print("元数据：", headers)
     # 上传文件名，本地文件路径
     bucket.put_object(key=ObjectName, data=LocalFile, headers=headers)
     # 返回的网址
